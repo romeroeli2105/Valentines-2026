@@ -30,26 +30,27 @@
             flex-direction: column;
             align-items: center;
             justify-content: space-between;
+            position: relative;
         }
 
-        /* 1. BACKGROUND - PUSHED TO BACK */
+        /* LAYER 1: Background */
         .background-gradient {
             position: absolute;
             top: 0; left: 0; width: 100%; height: 100%;
-            z-index: -1; /* Behind everything */
+            z-index: 1; /* Bottom Layer */
             background: radial-gradient(circle at 50% 30%, #4a0e28, #1c1c1e);
-            pointer-events: none; /* Clicks pass through */
+            pointer-events: none;
         }
 
-        /* 2. CONFETTI - PUSHED TO BACK UNTIL NEEDED */
+        /* LAYER 2: Confetti */
         #confetti-canvas {
             position: fixed;
             top: 0; left: 0; width: 100%; height: 100%;
             pointer-events: none;
-            z-index: 0;
+            z-index: 2;
         }
 
-        /* 3. MAIN PLAYER */
+        /* LAYER 3: Main Player Content */
         .player-container {
             width: 100%;
             padding: 20px 30px;
@@ -57,7 +58,7 @@
             flex-direction: column;
             align-items: center;
             margin-top: 60px;
-            z-index: 10;
+            z-index: 3; /* Above background */
             position: relative;
         }
 
@@ -68,4 +69,288 @@
             box-shadow: 0 20px 40px rgba(0,0,0,0.5);
             margin-bottom: 30px;
             position: relative;
-            background: #3
+            background: #333;
+            overflow: hidden;
+            transition: transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+
+        .album-art { width: 100%; height: 100%; object-fit: cover; }
+
+        .song-info { width: 100%; text-align: left; margin-bottom: 20px; }
+        .song-title { font-size: 24px; font-weight: 700; margin: 0 0 5px 0; }
+        .artist-name { font-size: 18px; color: rgba(255, 255, 255, 0.6); margin: 0; }
+
+        .progress-wrapper { width: 100%; margin-bottom: 30px; }
+        .progress-bar { width: 100%; height: 4px; background: rgba(255,255,255,0.2); border-radius: 2px; }
+        .progress-fill { width: 0%; height: 100%; background: rgba(255,255,255,0.8); border-radius: 2px; transition: width 1s linear; }
+        .time-stamps { display: flex; justify-content: space-between; font-size: 12px; color: rgba(255,255,255,0.4); margin-top: 8px; }
+
+        .controls {
+            display: flex; justify-content: center; align-items: center; gap: 50px; margin-bottom: 40px;
+            position: relative;
+        }
+
+        .control-btn {
+            background: none; border: none; color: white; cursor: pointer; padding: 0;
+            display: flex; align-items: center; justify-content: center;
+        }
+
+        #lyrics-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            width: 44px; height: 44px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            transition: all 0.2s ease;
+        }
+        #lyrics-btn.active-state {
+            background: #ff2d55; border: none; box-shadow: 0 4px 15px rgba(255, 45, 85, 0.4);
+        }
+        .lyrics-btn-icon { width: 22px; height: 22px; fill: rgba(255, 255, 255, 0.6); }
+        #lyrics-btn.active-state .lyrics-btn-icon { fill: white; }
+
+        /* LAYER 4: Overlay (Top) */
+        .lyrics-overlay {
+            position: fixed;
+            top: 0; left: 0; width: 100%; height: 100%;
+            background: radial-gradient(circle at 50% 30%, #4a0e28, #1c1c1e);
+            z-index: 4; /* Top Layer */
+            display: flex; flex-direction: column; justify-content: center;
+            padding: 40px;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+        .lyrics-overlay.active { opacity: 1; pointer-events: all; }
+
+        .lyric-line {
+            font-size: 30px; font-weight: 800; line-height: 1.4;
+            color: rgba(255,255,255,0.3); margin-bottom: 20px;
+            transition: all 0.5s ease; transform: translateY(20px);
+        }
+        .lyric-line.active { color: #fff; transform: translateY(0); }
+
+        .valentine-question {
+            margin-top: 40px; text-align: center; display: none;
+            animation: popIn 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            width: 100%;
+        }
+        
+        .buttons-row {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .base-btn {
+            border: none;
+            padding: 15px 20px;
+            font-size: 18px;
+            font-weight: 600;
+            border-radius: 30px;
+            cursor: pointer;
+            flex: 1;
+            max-width: 200px;
+            transition: transform 0.1s;
+        }
+
+        .base-btn:active { transform: scale(0.95); }
+        .btn-green { background: #34c759; color: white; }
+        .btn-red { background: #ff3b30; color: white; }
+        
+        .success-banner {
+            display: none;
+            background: white;
+            color: #ff2d55;
+            padding: 20px;
+            border-radius: 20px;
+            font-weight: 800;
+            font-size: 24px;
+            animation: popIn 0.5s ease;
+        }
+
+        @keyframes popIn { 0% { transform: scale(0.5); opacity: 0; } 100% { transform: scale(1); opacity: 1; } }
+    </style>
+</head>
+<body>
+
+    <div class="background-gradient"></div>
+    <canvas id="confetti-canvas"></canvas>
+
+    <div class="player-container">
+        <div class="album-art-wrapper" id="album-wrapper">
+            <img src="us.jpeg" class="album-art" alt="Us" 
+                 onerror="this.src='us.jpg'; this.onerror=function(){this.src='us.JPG'}">
+        </div>
+
+        <div class="song-info">
+            <h1 class="song-title">Be My Valentine?</h1>
+            <h2 class="artist-name">Eli</h2>
+        </div>
+
+        <div class="progress-wrapper">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progress-fill"></div>
+            </div>
+            <div class="time-stamps">
+                <span id="current-time">0:00</span>
+                <span>11:07</span>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="control-btn" style="opacity: 0.6;">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+            </button>
+            
+            <button class="control-btn play-btn" id="play-btn">
+                <svg width="50" height="50" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg>
+            </button>
+
+            <button class="control-btn" id="lyrics-btn">
+                <svg class="lyrics-btn-icon" viewBox="0 0 24 24">
+                   <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm0 14H6l-2 2V4h16v12z"/>
+                   <path d="M7 9h2v2H7zm4 0h2v2h11zm4 0h2v2h15z"/>
+                   <path d="M10.5 7h3v2h-3zm-3.5 0h2v2H7zM7 11h6v2H7z"/> 
+                </svg>
+            </button>
+        </div>
+    </div>
+
+    <div class="lyrics-overlay" id="lyrics-overlay">
+        <div class="lyric-line" id="line-1">I was scrolling through my phone...</div>
+        <div class="lyric-line" id="line-2">Looking at our photos...</div>
+        <div class="lyric-line" id="line-3">And I realized something...</div>
+        <div class="lyric-line" id="line-4">I never want to stop making memories with you.</div>
+        
+        <div class="valentine-question" id="final-question">
+            <h1 style="margin-bottom: 20px;">Will you be my Valentine?</h1>
+            
+            <div class="buttons-row" id="buttons-container">
+                <button class="base-btn btn-green" id="btn-green">Yes!</button>
+                <button class="base-btn btn-red" id="btn-red">Yes (but in red)</button>
+            </div>
+            
+            <div class="success-banner" id="success-banner">
+                It's a Date! 💖
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            
+            const playBtn = document.getElementById('play-btn');
+            const lyricsBtn = document.getElementById('lyrics-btn');
+            const lyricsOverlay = document.getElementById('lyrics-overlay');
+            const albumWrapper = document.getElementById('album-wrapper');
+            const progressFill = document.getElementById('progress-fill');
+            const currentTimeEl = document.getElementById('current-time');
+            
+            const btnGreen = document.getElementById('btn-green');
+            const btnRed = document.getElementById('btn-red');
+            const buttonsContainer = document.getElementById('buttons-container');
+            const successBanner = document.getElementById('success-banner');
+            const finalQuestion = document.getElementById('final-question');
+            
+            const lines = [
+                document.getElementById('line-1'),
+                document.getElementById('line-2'),
+                document.getElementById('line-3'),
+                document.getElementById('line-4')
+            ];
+
+            let isPlaying = false;
+            let currentSeconds = 0;
+            const totalDuration = 667; // 11:07
+            let interval = null;
+
+            // --- FUNCTIONS ---
+            
+            function triggerHaptic() {
+                if (navigator.vibrate) navigator.vibrate(10);
+            }
+
+            function togglePlay() {
+                triggerHaptic();
+                if (!isPlaying) {
+                    isPlaying = true;
+                    playBtn.innerHTML = '<svg width="50" height="50" viewBox="0 0 24 24" fill="white"><path d="M6 19h4V5H6v14zm8-14v14h4V5h-4z"/></svg>';
+                    albumWrapper.style.transform = "scale(1.05)";
+                    albumWrapper.style.boxShadow = "0 30px 60px rgba(0,0,0,0.6)";
+                    if (!interval) {
+                        interval = setInterval(() => {
+                            currentSeconds++;
+                            updateTimerUI();
+                        }, 1000);
+                    }
+                } else {
+                    isPlaying = false;
+                    playBtn.innerHTML = '<svg width="50" height="50" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg>';
+                    albumWrapper.style.transform = "scale(1)";
+                    albumWrapper.style.boxShadow = "0 20px 40px rgba(0,0,0,0.5)";
+                    clearInterval(interval);
+                    interval = null;
+                }
+            }
+
+            function updateTimerUI() {
+                let mins = Math.floor(currentSeconds / 60);
+                let secs = currentSeconds % 60;
+                currentTimeEl.innerText = `${mins}:${secs < 10 ? '0'+secs : secs}`;
+                let percentage = (currentSeconds / totalDuration) * 100;
+                progressFill.style.width = percentage + '%';
+            }
+
+            function handleSuccess() {
+                triggerHaptic();
+                buttonsContainer.style.display = 'none';
+                successBanner.style.display = 'block';
+
+                const duration = 3000;
+                const end = Date.now() + duration;
+                (function frame() {
+                    confetti({ particleCount: 5, angle: 60, spread: 55, origin: { x: 0 }, colors: ['#ff2d55', '#34c759'] });
+                    confetti({ particleCount: 5, angle: 120, spread: 55, origin: { x: 1 }, colors: ['#ff2d55', '#34c759'] });
+                    if (Date.now() < end) requestAnimationFrame(frame);
+                }());
+            }
+
+            // --- LISTENERS ---
+            playBtn.addEventListener('click', togglePlay);
+
+            lyricsBtn.addEventListener('click', () => {
+                triggerHaptic();
+                lyricsBtn.classList.add('active-state');
+                lyricsOverlay.classList.add('active');
+                
+                lines.forEach((line, index) => {
+                    setTimeout(() => {
+                        if(index > 0) {
+                            lines[index-1].classList.remove('active');
+                            lines[index-1].style.opacity = '0.3';
+                        }
+                        line.classList.add('active');
+                    }, index * 1750 + 500);
+                });
+
+                setTimeout(() => {
+                    lines.forEach(l => l.style.opacity = '0');
+                    finalQuestion.style.display = 'block';
+                }, lines.length * 1750 + 1000);
+            });
+
+            btnGreen.addEventListener('click', handleSuccess);
+            btnRed.addEventListener('click', handleSuccess);
+
+            // --- FORCE START ---
+            setTimeout(() => {
+                if(!isPlaying) togglePlay();
+            }, 500);
+        });
+    </script>
+</body>
+</html>
