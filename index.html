@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     
     <meta property="og:title" content="For You ❤️">
-    <meta property="og:image" content="https://valentines-2026-six.vercel.app/us.jpg">
+    <meta property="og:image" content="https://valentines-2026-six.vercel.app/us.jpeg">
     <meta property="og:url" content="https://valentines-2026-six.vercel.app">
     <meta name="theme-color" content="#1c1c1e">
     
@@ -297,10 +297,7 @@
 
     <div class="player-container">
         <div class="album-art-wrapper" id="album-wrapper">
-            <img src="us.jpg" 
-                 alt="Us" 
-                 class="album-art" 
-                 onerror="this.src='us.jpeg'; this.onerror=function(){this.src='us.JPG';}"> 
+            <img src="us.jpeg" alt="Us" class="album-art"> 
         </div>
 
         <div class="song-info">
@@ -373,78 +370,4 @@
                 startProgress();
             } else {
                 isPlaying = false;
-                playBtn.innerHTML = '<svg width="40" height="40" viewBox="0 0 24 24" fill="white"><path d="M8 5v14l11-7z"/></svg>';
-                albumWrapper.classList.remove('playing');
-            }
-        });
-
-        // SLOWED DOWN ANIMATION LOGIC (2.5 seconds per line)
-        lyricsBtn.addEventListener('click', () => {
-            lyricsBtn.classList.add('active-state');
-            lyricsOverlay.classList.add('active');
-            
-            lines.forEach((line, index) => {
-                setTimeout(() => {
-                    if(index > 0) lines[index-1].classList.remove('active');
-                    if(index > 0) lines[index-1].style.opacity = '0.3';
-                    line.classList.add('active');
-                }, index * 2500 + 500); // 2.5s per line (Slowed down 1.5x)
-            });
-
-            setTimeout(() => {
-                lines.forEach(l => l.style.opacity = '0');
-                finalQuestion.style.display = 'block';
-            }, lines.length * 2500 + 1000);
-        });
-
-        yesBtn.addEventListener('click', () => {
-            const duration = 3000;
-            const end = Date.now() + duration;
-
-            (function frame() {
-                confetti({
-                    particleCount: 5,
-                    angle: 60,
-                    spread: 55,
-                    origin: { x: 0 },
-                    colors: ['#ff2d55', '#ffffff']
-                });
-                confetti({
-                    particleCount: 5,
-                    angle: 120,
-                    spread: 55,
-                    origin: { x: 1 },
-                    colors: ['#ff2d55', '#ffffff']
-                });
-
-                if (Date.now() < end) {
-                    requestAnimationFrame(frame);
-                }
-            }());
-
-            yesBtn.innerText = "It's a Date! 💖";
-            yesBtn.style.background = "white";
-            yesBtn.style.color = "#ff2d55";
-        });
-
-        function startProgress() {
-            let width = 0;
-            const interval = setInterval(() => {
-                if (!isPlaying) {
-                    clearInterval(interval);
-                    return;
-                }
-                if (width >= 100) width = 0;
-                width += 0.5;
-                progressFill.style.width = width + '%';
-                
-                let seconds = Math.floor((width / 100) * 200);
-                let mins = Math.floor(seconds / 60);
-                let secs = seconds % 60;
-                document.getElementById('current-time').innerText = `${mins}:${secs < 10 ? '0'+secs : secs}`;
-
-            }, 100);
-        }
-    </script>
-</body>
-</html>
+                playBtn.innerHTML = '<svg
