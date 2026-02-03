@@ -173,10 +173,10 @@
             font-size: 50px;
         }
 
-        /* --- UPDATED LYRICS BUTTON CSS --- */
+        /* --- Lyrics Button CSS --- */
         #lyrics-btn {
             background: rgba(255, 255, 255, 0.1);
-            border-radius: 12px; /* Square with rounded corners */
+            border-radius: 12px;
             width: 44px;
             height: 44px;
             backdrop-filter: blur(10px);
@@ -187,7 +187,7 @@
         .lyrics-btn-icon {
             width: 22px;
             height: 22px;
-            fill: rgba(255, 255, 255, 0.6); /* Grey by default */
+            fill: rgba(255, 255, 255, 0.6);
             transition: fill 0.3s ease;
         }
 
@@ -297,8 +297,11 @@
 
     <div class="player-container">
         <div class="album-art-wrapper" id="album-wrapper">
-            <img src="us.jpg" alt="Us" class="album-art" onerror="this.src='us.jpeg'"> 
-            </div>
+            <img src="us.jpg" 
+                 alt="Us" 
+                 class="album-art" 
+                 onerror="this.src='us.jpeg'; this.onerror=function(){this.src='us.JPG';}"> 
+        </div>
 
         <div class="song-info">
             <h1 class="song-title">Be My Valentine?</h1>
@@ -375,12 +378,9 @@
             }
         });
 
-        // Updated Lyrics Button Logic
+        // SLOWED DOWN ANIMATION LOGIC (2.5 seconds per line)
         lyricsBtn.addEventListener('click', () => {
-            // Add the pink active state
             lyricsBtn.classList.add('active-state');
-            
-            // Show overlay
             lyricsOverlay.classList.add('active');
             
             lines.forEach((line, index) => {
@@ -388,13 +388,13 @@
                     if(index > 0) lines[index-1].classList.remove('active');
                     if(index > 0) lines[index-1].style.opacity = '0.3';
                     line.classList.add('active');
-                }, index * 1500 + 500);
+                }, index * 2500 + 500); // 2.5s per line (Slowed down 1.5x)
             });
 
             setTimeout(() => {
                 lines.forEach(l => l.style.opacity = '0');
                 finalQuestion.style.display = 'block';
-            }, lines.length * 1500 + 1000);
+            }, lines.length * 2500 + 1000);
         });
 
         yesBtn.addEventListener('click', () => {
