@@ -4,6 +4,36 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
     <title>For You</title>
+/* Add this to your CSS */
+.lyrics-btn-icon {
+    width: 24px;
+    height: 24px;
+    fill: rgba(255, 255, 255, 0.5); /* Inactive grey */
+    transition: all 0.3s ease;
+}
+
+.control-btn.active .lyrics-btn-icon {
+    fill: white; /* Active white */
+}
+
+/* The rounded container */
+#lyrics-btn {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 12px;
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+    transition: all 0.3s ease;
+}
+
+#lyrics-btn.active-state {
+    background: #ff2d55; /* Pink when active */
+    box-shadow: 0 0 20px rgba(255, 45, 85, 0.4);
+}
     <style>
         :root {
             --primary-color: #ff2d55; /* Apple Music Pink */
